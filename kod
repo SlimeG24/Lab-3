@@ -1,0 +1,79 @@
+import java.io.File
+import kotlin.random.Random
+
+open class Character(
+    val name: String,
+    var health: Int,
+    val attackLevel: Int,
+    val defenseLevel: Int
+)
+
+class Hero(name: String, health: Int, attackLevel: Int, defenseLevel: Int) : Character(name, health, attackLevel, defenseLevel)
+
+class Dragon(name: String, health: Int, attackLevel: Int, defenseLevel: Int) : Character(name, health, attackLevel, defenseLevel)
+
+fun main() {
+    println("Введіть ім'я героя:")
+    val heroName = readLine() ?: "Герой"
+    val hero = Hero(heroName, 100, 20, 15)
+    val dragon = Dragon("Дракон", 120, 25, 10)
+
+    val commands = File("commands.txt").readLines()
+
+    var round = 1
+    for (command in commands) {
+        if (hero.health <= 0 || dragon.health <= 0) break
+
+        println("Раунд $round")
+        println("Команда: $command")
+        
+        val heroAction = if (command.trim().lowercase() == "атакувати") "attack" else "defend"
+        val dragonAction = if (Random.nextBoolean()) "attack" else "defend"
+        
+        println("${hero.name} обрав ${if (heroAction == "attack") "атаку" else "захист"}.")
+        println("${dragon.name} обрав ${if (dragonAction == "attack") "атаку" else "захист"}.")
+
+        val heroAttack = Random.nextInt(1, hero.attackLevel + 1)
+        val dragonAttack = Random.nextInt(1, dragon.attackLevel + 1)
+        val heroDefense = Random.nextInt(1, hero.defenseLevel + 1)
+        val dragonDefense = Random.nextInt(1, dragon.defenseLevel + 1)
+        
+        when {
+            heroAction == "attack" && dragonAction == "attack" -> {
+                hero.health -= dragonAttack / 2
+                dragon.health -= heroAttack / 2
+                println("Обидва атакували. ${hero.name} втратив ${dragonAttack / 2} здоров'я. ${dragon.name} втратив ${heroAttack / 2} здоров'я.")
+            }
+            heroAction == "attack" && dragonAction == "defend" -> {
+                if (heroAttack > dragonDefense) {
+                    dragon.health -= (heroAttack - dragonDefense)
+                    println("${hero.name} атакував і пробив захист. ${dragon.name} втратив ${heroAttack - dragonDefense} здоров'я.")
+                } else {
+                    println("${hero.name} атакував, але захист ${dragon.name} був сильнішим.")
+                }
+            }
+            heroAction == "defend" && dragonAction == "attack" -> {
+                if (dragonAttack > heroDefense) {
+                    hero.health -= (dragonAttack - heroDefense)
+                    println("${dragon.name} атакував і пробив захист. ${hero.name} втратив ${dragonAttack - heroDefense} здоров'я.")
+                } else {
+                    println("${dragon.name} атакував, але захист ${hero.name} був сильнішим.")
+                }
+            }
+            heroAction == "defend" && dragonAction == "defend" -> {
+                println("Обидва захищаються. Нічия в раунді.")
+            }
+        }
+
+        println("${hero.name} має ${hero.health} здоров'я. ${dragon.name} має ${dragon.health} здоров'я.")
+        round++
+    }
+
+    if (hero.health > 0 && dragon.health <= 0) {
+        println("${hero.name} переміг!")
+    } else if (dragon.health > 0 && hero.health <= 0) {
+        println("${dragon.name} переміг!")
+    } else {
+        println("Нічия!")
+    }
+}
